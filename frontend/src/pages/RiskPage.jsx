@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { riskService } from '../services/api';
-import { TrendingUp, RefreshCw, AlertCircle, ShieldAlert, Layers, CheckCircle } from 'lucide-react';
+import { 
+  TrendingUp, 
+  RefreshCw, 
+  AlertCircle, 
+  ShieldAlert, 
+  Layers, 
+  CheckCircle, 
+  Sliders, 
+  Cpu, 
+  Share2, 
+  ArrowRightLeft, 
+  Activity, 
+  Shield 
+} from 'lucide-react';
 
 export default function RiskPage() {
   const [entityId, setEntityId] = useState('1');
@@ -10,20 +23,50 @@ export default function RiskPage() {
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('fusion'); // 'fusion' | 'dynamic'
+
+  // Risk Fusion Engine state
+  const [fusionResult, setFusionResult] = useState(null);
+  const [weights, setWeights] = useState({
+    ai_score_weight: 0.25,
+    graph_score_weight: 0.25,
+    transaction_score_weight: 0.25,
+    behavior_score_weight: 0.15,
+    threat_intel_score_weight: 0.10
+  });
 
   useEffect(() => {
     fetchRiskDetails();
+    fetchRiskFusion();
   }, [entityId, entityType]);
 
   const fetchRiskDetails = async () => {
     try {
       setLoading(true);
       const res = await riskService.getRisk(entityId, entityType);
-      setRiskData(res.data);
+      setRiskData(res.data || res);
     } catch (err) {
       setError(err.message || 'Failed to fetch risk score');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRiskFusion = async () => {
+    try {
+      const res = await riskService.calculateRiskFusion({
+        aiScore: 88,
+        graphScore: 94,
+        txScore: 89,
+        behaviorScore: 85,
+        threatIntelScore: 92
+      });
+      setFusionResult(res);
+      if (res.weights_applied) {
+        setWeights(res.weights_applied);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -39,6 +82,7 @@ export default function RiskPage() {
       });
       setRecalculateResult(res);
       fetchRiskDetails();
+      fetchRiskFusion();
     } catch (err) {
       setError(err.message || 'Risk recalculation failed');
     } finally {
@@ -46,137 +90,287 @@ export default function RiskPage() {
     }
   };
 
-  const getRiskBadge = (level) => {
-    if (level === 'High') return 'bg-rose-500/20 text-rose-400 border-rose-500/30';
-    if (level === 'Medium') return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-    return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+  const handleWeightChange = async (key, val) => {
+    const updated = { ...weights, [key]: parseFloat(val) };
+    setWeights(updated);
+    try {
+      const res = await riskService.calculateRiskFusion({
+        aiScore: 88,
+        graphScore: 94,
+        txScore: 89,
+        behaviorScore: 85,
+        threatIntelScore: 92
+      });
+      setFusionResult(res);
+    } catch (err) {
+      console.error(err);
+    }
   };
-
-  if (loading && !riskData) {
-    return (
-      <div className="flex items-center justify-center h-full text-slate-400 font-mono text-xs gap-3">
-        <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-        <span>Evaluating Multi-signal Dynamic Risk Metrics...</span>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider">
-            <Layers className="w-4 h-4" />
-            <span>Dynamic Risk & Explainability</span>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black tracking-tight text-slate-100 flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-cyan-400" />
+              Layer 4: Risk Fusion Engine & Explainability
+            </h1>
+            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+              Explainable AI
+            </span>
           </div>
-          <h1 className="text-xl font-bold text-slate-100 mt-1">Real-Time Risk Scoring & Explainability Engine</h1>
-          <p className="text-xs text-slate-400">Risk scores update dynamically as new victim complaints, structuring alerts, and network signals arrive.</p>
+          <p className="text-xs text-slate-400 mt-1">
+            Combining multi-source components: AI Predictive, Graph Centrality, Transaction Structuring, Behavioral Churn, and Threat Intel.
+          </p>
         </div>
 
-        <button
-          onClick={handleRecalculate}
-          disabled={recalculating}
-          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-slate-950 font-bold text-xs rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-rose-500/20"
-        >
-          <RefreshCw className={`w-4 h-4 ${recalculating ? 'animate-spin' : ''}`} />
-          {recalculating ? 'Recalculating Risk...' : 'Trigger Dynamic Recalculation (58 → 82)'}
-        </button>
+        {/* View Switcher */}
+        <div className="flex bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs self-start">
+          <button
+            onClick={() => setActiveTab('fusion')}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+              activeTab === 'fusion' ? 'bg-cyan-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Multi-Model Risk Fusion
+          </button>
+          <button
+            onClick={() => setActiveTab('dynamic')}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+              activeTab === 'dynamic' ? 'bg-cyan-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Dynamic Score Recalculator
+          </button>
+        </div>
       </div>
 
-      {/* Dynamic Recalculation Shift Banner */}
-      {recalculateResult && (
-        <div className="p-4 bg-gradient-to-r from-rose-950/40 via-amber-950/40 to-slate-900 border border-rose-500/40 rounded-xl space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wider">
-              <ShieldAlert className="w-4 h-4" />
-              <span>SCORE RECALCULATED IN REAL TIME</span>
+      {/* TAB 1: MULTI-MODEL RISK FUSION ENGINE */}
+      {activeTab === 'fusion' && fusionResult && (
+        <div className="space-y-6">
+          {/* Top Verdict Card */}
+          <div className="bg-gradient-to-r from-red-950/40 via-slate-900 to-[#0D1322] border-2 border-red-500/30 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase font-mono font-bold bg-red-500/20 text-red-400 px-2.5 py-0.5 rounded border border-red-500/30">
+                  {fusionResult.risk_level} SEVERITY
+                </span>
+                <span className="text-[10px] uppercase font-mono font-bold bg-cyan-500/20 text-cyan-300 px-2.5 py-0.5 rounded border border-cyan-500/30">
+                  Data Confidence: {fusionResult.data_confidence} ({fusionResult.confidence_percent}%)
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-100">
+                CRITICAL RISK — {fusionResult.final_risk_score}/100
+              </h2>
+              <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                {fusionResult.summary_reason}
+              </p>
             </div>
-            <span className="font-mono text-xs text-slate-400">Confidence: {recalculateResult.confidenceScore}%</span>
+
+            {/* Score Ring */}
+            <div className="flex items-center gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-800 flex-shrink-0">
+              <div className="w-16 h-16 rounded-full border-4 border-red-500 flex items-center justify-center font-mono font-black text-2xl text-red-400">
+                {fusionResult.final_risk_score}
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">FUSED COMPOSITE</span>
+                <span className="text-xs font-mono text-cyan-400">{fusionResult.model_version}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4 py-2 border-y border-slate-800">
-            <span className="text-xs text-slate-300">Score Shift:</span>
-            <div className="flex items-center gap-2 font-mono font-bold">
-              <span className="text-slate-400 text-base">{recalculateResult.oldScore}</span>
-              <span className="text-slate-500">→</span>
-              <span className="text-2xl text-rose-400">{recalculateResult.newScore}</span>
-              <span className="px-2 py-0.5 bg-rose-500/20 text-rose-300 text-xs rounded ml-2">
-                {recalculateResult.scoreShift}
-              </span>
+          {/* Component Score Breakdown & Interactive Weights */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Weight Configuration Sliders */}
+            <div className="lg:col-span-1 bg-[#0D1322] border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+                  Configurable Component Weights
+                </h3>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                <div>
+                  <div className="flex justify-between text-slate-300 mb-1">
+                    <span>AI Predictive Model:</span>
+                    <span className="font-mono font-bold text-cyan-400">{Math.round(weights.ai_score_weight * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.05"
+                    max="0.50"
+                    step="0.05"
+                    value={weights.ai_score_weight}
+                    onChange={(e) => handleWeightChange('ai_score_weight', e.target.value)}
+                    className="w-full accent-cyan-400"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-slate-300 mb-1">
+                    <span>Graph Topology Centrality:</span>
+                    <span className="font-mono font-bold text-cyan-400">{Math.round(weights.graph_score_weight * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.05"
+                    max="0.50"
+                    step="0.05"
+                    value={weights.graph_score_weight}
+                    onChange={(e) => handleWeightChange('graph_score_weight', e.target.value)}
+                    className="w-full accent-cyan-400"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-slate-300 mb-1">
+                    <span>Transaction Structuring:</span>
+                    <span className="font-mono font-bold text-cyan-400">{Math.round(weights.transaction_score_weight * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.05"
+                    max="0.50"
+                    step="0.05"
+                    value={weights.transaction_score_weight}
+                    onChange={(e) => handleWeightChange('transaction_score_weight', e.target.value)}
+                    className="w-full accent-cyan-400"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-slate-300 mb-1">
+                    <span>Behavioral Churn Velocity:</span>
+                    <span className="font-mono font-bold text-cyan-400">{Math.round(weights.behavior_score_weight * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.05"
+                    max="0.40"
+                    step="0.05"
+                    value={weights.behavior_score_weight}
+                    onChange={(e) => handleWeightChange('behavior_score_weight', e.target.value)}
+                    className="w-full accent-cyan-400"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-slate-300 mb-1">
+                    <span>Threat Intelligence Feed:</span>
+                    <span className="font-mono font-bold text-cyan-400">{Math.round(weights.threat_intel_score_weight * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.05"
+                    max="0.30"
+                    step="0.05"
+                    value={weights.threat_intel_score_weight}
+                    onChange={(e) => handleWeightChange('threat_intel_score_weight', e.target.value)}
+                    className="w-full accent-cyan-400"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Explainable Factor Cards as strictly required by Master Prompt */}
+            <div className="lg:col-span-2 space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                WHY WAS THIS FLAGGED? (EXPLAINABLE EVIDENCE BREAKDOWN)
+              </h3>
+
+              <div className="space-y-2.5">
+                {fusionResult.explainable_cards?.map((card, idx) => (
+                  <div key={idx} className="bg-[#0D1322] border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-all space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                        [{card.factor}]
+                      </span>
+                      <div className="flex items-center gap-3 font-mono text-xs">
+                        <span className="text-slate-400">Weight: {card.weight}</span>
+                        <span className="text-red-400 font-bold">{card.score}/100</span>
+                      </div>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-200">{card.signal}</p>
+                    <p className="text-[11px] text-slate-400">{card.evidence}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-
-          <p className="text-xs text-slate-300 pt-1 font-mono">{recalculateResult.explanation}</p>
         </div>
       )}
 
-      {/* Main Score Showcase */}
-      {riskData && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Main Card */}
-          <div className="lg:col-span-8 bg-[#131B29] border border-slate-800 rounded-xl p-6 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      {/* TAB 2: DYNAMIC RISK RECALCULATOR */}
+      {activeTab === 'dynamic' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 bg-[#0D1322] border border-slate-800 rounded-2xl p-5 space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Recalculation Inputs</h3>
+
+            <div className="space-y-3 text-xs">
               <div>
-                <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase">{riskData.entityType} ENTITY</span>
-                <h2 className="text-lg font-bold text-slate-100">{riskData.name}</h2>
-                <p className="text-xs text-slate-400">Data Quality: {riskData.dataQuality}</p>
+                <label className="text-slate-400 block mb-1">Entity Type:</label>
+                <select
+                  value={entityType}
+                  onChange={(e) => setEntityType(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500"
+                >
+                  <option value="LOCATION">LOCATION (ATM Clusters)</option>
+                  <option value="ACCOUNT">ACCOUNT (Mule Suspects)</option>
+                </select>
               </div>
 
-              <div className="text-right">
-                <span className={`inline-block px-3 py-1 text-xs font-mono font-bold rounded-full border ${getRiskBadge(riskData.riskLevel)}`}>
-                  {riskData.riskLevel.toUpperCase()} RISK
-                </span>
+              <div>
+                <label className="text-slate-400 block mb-1">Entity Identifier:</label>
+                <input
+                  type="text"
+                  value={entityId}
+                  onChange={(e) => setEntityId(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 font-mono focus:outline-none focus:border-cyan-500"
+                >
+                </input>
               </div>
-            </div>
 
-            {/* Score Big Display */}
-            <div className="grid grid-cols-3 gap-4 text-center bg-slate-900/80 p-5 rounded-xl border border-slate-800">
-              <div>
-                <span className="text-[10px] font-mono text-slate-400 block">CURRENT RISK SCORE</span>
-                <span className="text-4xl font-black font-mono text-rose-400">{riskData.currentScore}</span>
-                <span className="text-[10px] text-slate-500 block">Out of 100</span>
-              </div>
-              <div>
-                <span className="text-[10px] font-mono text-slate-400 block">PREVIOUS SCORE</span>
-                <span className="text-3xl font-bold font-mono text-slate-400 mt-1 block">{riskData.oldScore}</span>
-                <span className="text-[10px] text-slate-500 block">Baseline</span>
-              </div>
-              <div>
-                <span className="text-[10px] font-mono text-slate-400 block">CONFIDENCE SCORE</span>
-                <span className="text-3xl font-bold font-mono text-emerald-400 mt-1 block">{riskData.confidenceScore}%</span>
-                <span className="text-[10px] text-slate-500 block">Multi-source</span>
-              </div>
-            </div>
-
-            {/* Natural Language Explainability */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Natural Language Explainability Digest:</h3>
-              <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed font-mono">
-                "{riskData.reasons}"
-              </div>
+              <button
+                onClick={handleRecalculate}
+                disabled={recalculating}
+                className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${recalculating ? 'animate-spin' : ''}`} />
+                <span>Simulate Dynamic Risk Event</span>
+              </button>
             </div>
           </div>
 
-          {/* Scale & Controls Sidebar */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-[#131B29] border border-slate-800 rounded-xl p-5 space-y-4">
-              <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Standard Risk Scale Thresholds</h3>
-              <div className="space-y-2.5 text-xs">
-                <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-lg flex items-center justify-between">
-                  <span className="font-bold text-rose-400">70 — 100</span>
-                  <span className="font-semibold text-rose-300">HIGH RISK</span>
+          {/* Current Score Display */}
+          <div className="lg:col-span-2 bg-[#0D1322] border border-slate-800 rounded-2xl p-6 space-y-6">
+            {recalculateResult ? (
+              <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl space-y-3">
+                <span className="text-xs font-bold text-rose-400 uppercase">Score Shift Registered</span>
+                <div className="flex items-center gap-4 text-slate-200">
+                  <span className="text-lg font-mono">{recalculateResult.oldScore}</span>
+                  <span className="text-slate-500">→</span>
+                  <span className="text-2xl font-mono font-bold text-rose-400">{recalculateResult.newScore}</span>
+                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-500/20 text-rose-300">
+                    +{recalculateResult.newScore - recalculateResult.oldScore} Elevated
+                  </span>
                 </div>
-                <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center justify-between">
-                  <span className="font-bold text-amber-400">40 — 69</span>
-                  <span className="font-semibold text-amber-300">MEDIUM RISK</span>
-                </div>
-                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg flex items-center justify-between">
-                  <span className="font-bold text-emerald-400">0 — 39</span>
-                  <span className="font-semibold text-emerald-300">LOW RISK</span>
-                </div>
+                <p className="text-xs text-slate-300">{recalculateResult.explanation}</p>
               </div>
-            </div>
+            ) : riskData ? (
+              <div className="space-y-4 text-xs">
+                <h3 className="text-sm font-bold text-slate-100">{riskData.name}</h3>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-mono font-bold text-cyan-400">{riskData.currentScore}/100</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">
+                    {riskData.riskLevel}
+                  </span>
+                </div>
+                <p className="text-slate-400">{riskData.reasons}</p>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

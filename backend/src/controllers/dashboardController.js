@@ -4,31 +4,56 @@ const LocationModel = require('../models/locationModel');
 const AlertModel = require('../models/alertModel');
 const InvestigationModel = require('../models/investigationModel');
 const PredictionModel = require('../models/predictionModel');
-const RiskModel = require('../models/riskModel');
+const db = require('../config/db');
 
 exports.getSummary = async (req, res, next) => {
   try {
-    const transactions = await TransactionModel.getAll();
-    const accounts = await AccountModel.getAll();
-    const locations = await LocationModel.getAll();
-    const alerts = await AlertModel.getAll();
-    const investigations = await InvestigationModel.getAll();
-    const predictions = await PredictionModel.getAll();
+    let transactions = [];
+    let accounts = [];
+    let locations = [];
+    let alerts = [];
+    let investigations = [];
+    let predictions = [];
+    let recoveryCases = [];
+
+    if (db.isFallback()) {
+      transactions = db.memoryStore.transactions;
+      accounts = db.memoryStore.accounts;
+      locations = db.memoryStore.locations;
+      alerts = db.memoryStore.alerts;
+      investigations = db.memoryStore.investigations;
+      predictions = db.memoryStore.predictions;
+      recoveryCases = db.memoryStore.recovery_cases || [];
+    } else {
+      transactions = await TransactionModel.getAll();
+      accounts = await AccountModel.getAll();
+      locations = await LocationModel.getAll();
+      alerts = await AlertModel.getAll();
+      investigations = await InvestigationModel.getAll();
+      predictions = await PredictionModel.getAll();
+      recoveryCases = db.memoryStore.recovery_cases || [];
+    }
 
     const suspiciousCount = transactions.filter(t => t.is_suspicious).length;
-    const muleCount = accounts.filter(a => a.status === 'MULE_SUSPECT').length;
-    const highRiskLocations = locations.filter(l => l.risk_level === 'High').length;
-    const openCases = investigations.filter(i => i.status === 'OPEN' || i.status === 'IN_PROGRESS').length;
+    const muleCount = accounts.filter(a => a.status === 'MULE_SUSPECT' || a.risk_score >= 70).length;
+    const criticalAlertsCount = alerts.filter(a => a.priority === 'CRITICAL' || a.priority === 'HIGH').length;
+    const activeCasesCount = investigations.filter(i => i.status === 'OPEN' || i.status === 'IN_PROGRESS').length;
 
-    // KPI Metrics
-    const kpis = {
-      totalTransactions: transactions.length,
-      suspiciousTransactions: suspiciousCount,
-      activeMuleAccounts: muleCount,
-      highRiskLocations: highRiskLocations,
-      activeAlerts: alerts.filter(a => a.status === 'ACTIVE').length,
-      openInvestigations: openCases,
-      averageRiskScore: 78
+    // Six Master KPI Cards requested in Master Prompt:
+    // 1. TOTAL RISK SIGNALS
+    // 2. CRITICAL ALERTS
+    // 3. SUSPICIOUS NETWORKS
+    // 4. HIGH-RISK MULE ACCOUNTS
+    // 5. ACTIVE CASES
+    // 6. RECOVERY CASES
+    const masterKpis = {
+      totalRiskSignals: suspiciousCount + (db.memoryStore.threat_indicators ? db.memoryStore.threat_indicators.length : 4),
+      criticalAlerts: criticalAlertsCount,
+      suspiciousNetworks: (db.memoryStore.fraud_campaigns ? db.memoryStore.fraud_campaigns.length : 1) + 2,
+      highRiskMuleAccounts: muleCount,
+      activeCases: activeCasesCount,
+      recoveryCases: recoveryCases.length,
+      averageMuleRisk: 86
     };
 
     // Risk Distribution Chart Data
@@ -38,15 +63,15 @@ exports.getSummary = async (req, res, next) => {
       { name: 'High (70-100)', count: accounts.filter(a => a.risk_score >= 70).length + locations.filter(l => l.risk_score >= 70).length, fill: '#EF4444' }
     ];
 
-    // Transaction Trend (Last 7 Days / Hours)
+    // Transaction Trend (Last 7 Hours)
     const transactionTrend = [
       { time: '14:00', normal: 120, suspicious: 2 },
       { time: '15:00', normal: 180, suspicious: 4 },
       { time: '16:00', normal: 210, suspicious: 8 },
       { time: '17:00', normal: 340, suspicious: 15 },
       { time: '18:00 (Structuring)', normal: 420, suspicious: 45 },
-      { time: '19:00', normal: 290, suspicious: 30 },
-      { time: '20:00', normal: 190, suspicious: 12 }
+      { time: '19:00 (Mule Churn)', normal: 290, suspicious: 32 },
+      { time: '20:00 (Cash-Out)', normal: 190, suspicious: 18 }
     ];
 
     // Geographic / Location Risk View
@@ -63,17 +88,18 @@ exports.getSummary = async (req, res, next) => {
     const dynamicRiskShift = {
       entity: 'ATM Cluster A - North Hub',
       oldScore: 58,
-      newScore: 82,
-      change: '+24 ↑',
-      riskLevel: 'High',
-      reason: 'Risk increased because newly detected patterns matched an existing fraud network and recent suspicious transaction activity.'
+      newScore: 88,
+      change: '+30 ↑',
+      riskLevel: 'Critical',
+      reason: 'Dynamic Risk Engine escalated score: Inflow from victim CMP-2026-901 split into 4 mule nodes and forecasted evening ATM cash-out.'
     };
 
     res.json({
       success: true,
-      platform: 'FraudDNA 360',
-      pipeline: 'PREVENT → CONNECT → PREDICT → EXPLAIN → RESPOND',
-      kpis,
+      platform: 'FraudDNA 360 - Financial Crime Intelligence Platform',
+      tagline: 'SMART PROTECTION. EARLY DETECTION. CONNECTED INTELLIGENCE. FASTER RESPONSE.',
+      pipeline: 'PREVENT → CONNECT → PREDICT → EXPLAIN → RESPOND → RECOVER',
+      masterKpis,
       charts: {
         riskDistribution,
         transactionTrend,
@@ -82,7 +108,8 @@ exports.getSummary = async (req, res, next) => {
       dynamicRiskShift,
       latestPredictions: predictions,
       recentAlerts: alerts.slice(0, 5),
-      openInvestigations: investigations.slice(0, 5)
+      openInvestigations: investigations.slice(0, 5),
+      recoveryCases: recoveryCases.slice(0, 5)
     });
   } catch (err) {
     next(err);

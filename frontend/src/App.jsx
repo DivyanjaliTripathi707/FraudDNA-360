@@ -12,6 +12,10 @@ import InvestigationsPage from './pages/InvestigationsPage';
 import TransactionsPage from './pages/TransactionsPage';
 import AccountsPage from './pages/AccountsPage';
 import LocationsPage from './pages/LocationsPage';
+import MuleDetectionPage from './pages/MuleDetectionPage';
+import MoneyFlowPage from './pages/MoneyFlowPage';
+import ScamCheckerPage from './pages/ScamCheckerPage';
+import RecoveryPage from './pages/RecoveryPage';
 
 export default function App() {
   return (
@@ -21,6 +25,10 @@ export default function App() {
         
         <Route path="/dashboard" element={<MainLayout><DashboardPage /></MainLayout>} />
         <Route path="/detection" element={<MainLayout><DetectionPage /></MainLayout>} />
+        <Route path="/mule-detection" element={<MainLayout><MuleDetectionPage /></MainLayout>} />
+        <Route path="/money-flow" element={<MainLayout><MoneyFlowPage /></MainLayout>} />
+        <Route path="/scam-checker" element={<MainLayout><ScamCheckerPage /></MainLayout>} />
+        <Route path="/recovery" element={<MainLayout><RecoveryPage /></MainLayout>} />
         <Route path="/network" element={<MainLayout><NetworkPage /></MainLayout>} />
         <Route path="/predictions" element={<MainLayout><PredictionsPage /></MainLayout>} />
         <Route path="/risk" element={<MainLayout><RiskPage /></MainLayout>} />
