@@ -31,7 +31,7 @@ export default function MainLayout({ children }) {
 
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const stored = sessionStorage.getItem('frauddna_user') || localStorage.getItem('frauddna_user');
+      const stored = sessionStorage.getItem('frauddna_user');
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
