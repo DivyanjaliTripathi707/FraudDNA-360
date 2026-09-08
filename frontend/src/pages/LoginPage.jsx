@@ -15,6 +15,9 @@ export default function LoginPage() {
   React.useEffect(() => {
     localStorage.removeItem('frauddna_token');
     localStorage.removeItem('frauddna_user');
+    sessionStorage.removeItem('frauddna_authenticated');
+    sessionStorage.removeItem('frauddna_token');
+    sessionStorage.removeItem('frauddna_user');
   }, []);
 
   const handleRoleSelect = (role) => {
@@ -39,6 +42,9 @@ export default function LoginPage() {
     try {
       const res = await authService.login({ username, password });
       if (res.token) {
+        sessionStorage.setItem('frauddna_authenticated', 'true');
+        sessionStorage.setItem('frauddna_token', res.token);
+        sessionStorage.setItem('frauddna_user', JSON.stringify(res.user));
         localStorage.setItem('frauddna_token', res.token);
         localStorage.setItem('frauddna_user', JSON.stringify(res.user));
 

@@ -19,12 +19,13 @@ import ScamCheckerPage from './pages/ScamCheckerPage';
 import RecoveryPage from './pages/RecoveryPage';
 import FileComplaintPage from './pages/FileComplaintPage';
 
-// Protected Route Guard Component
+// Protected Route Guard Component — Forces Login Page first if not authenticated in current session
 function ProtectedRoute({ children, allowedRoles }) {
-  const token = localStorage.getItem('frauddna_token');
-  const userStr = localStorage.getItem('frauddna_user');
+  const isAuthenticated = sessionStorage.getItem('frauddna_authenticated');
+  const token = sessionStorage.getItem('frauddna_token') || localStorage.getItem('frauddna_token');
+  const userStr = sessionStorage.getItem('frauddna_user') || localStorage.getItem('frauddna_user');
 
-  if (!token || !userStr) {
+  if (!isAuthenticated || !token || !userStr) {
     return <Navigate to="/login" replace />;
   }
 

@@ -55,8 +55,8 @@ export default function MainLayout({ children }) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('frauddna_token');
-    localStorage.removeItem('frauddna_user');
+    sessionStorage.clear();
+    localStorage.clear();
     navigate('/login');
   };
 
@@ -244,39 +244,16 @@ export default function MainLayout({ children }) {
               <span className="text-[11px] font-mono">{privacyMask ? 'PII MASKED' : 'FULL VIEW'}</span>
             </button>
 
-            {/* Evaluator Quick Role Switcher */}
-            <div className="flex items-center bg-slate-900 border border-slate-700 rounded-lg p-0.5 text-xs font-medium">
-              <span className="text-[10px] text-slate-400 uppercase font-bold px-2">Role:</span>
-              <button
-                onClick={() => handleRoleSwitch('Investigator')}
-                className={`px-2 py-1 rounded text-[11px] transition-all ${
-                  currentUser.role === 'Investigator'
-                    ? 'bg-cyan-500 text-slate-950 font-bold shadow'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Investigator
-              </button>
-              <button
-                onClick={() => handleRoleSwitch('Admin')}
-                className={`px-2 py-1 rounded text-[11px] transition-all ${
-                  currentUser.role === 'Admin'
-                    ? 'bg-purple-500 text-white font-bold shadow'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Admin
-              </button>
-              <button
-                onClick={() => handleRoleSwitch('Citizen')}
-                className={`px-2 py-1 rounded text-[11px] transition-all ${
-                  currentUser.role === 'Citizen'
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Citizen
-              </button>
+            {/* Active Role Badge */}
+            <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-900 border border-slate-700/80 rounded-lg text-xs font-medium">
+              <span className="text-[10px] text-slate-400 font-bold uppercase">Role:</span>
+              <span className={`font-extrabold text-[11px] px-2 py-0.5 rounded ${
+                currentUser.role === 'Admin' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
+                currentUser.role === 'Citizen' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+              }`}>
+                {currentUser.role}
+              </span>
             </div>
           </div>
         </header>
