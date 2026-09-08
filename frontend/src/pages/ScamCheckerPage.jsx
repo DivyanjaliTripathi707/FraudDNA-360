@@ -202,18 +202,27 @@ export default function ScamCheckerPage() {
             </div>
           </div>
 
-          {/* Quick Action Button */}
+          {/* Quick Action Buttons */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-red-500/20">
             <span className="text-xs text-slate-300">
-              Has money already been deducted from your account?
+              Has money already been deducted or scam details received?
             </span>
-            <Link
-              to="/recovery"
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-500 hover:bg-red-400 text-white font-bold text-xs shadow-lg shadow-red-500/30 transition-all"
-            >
-              <span>Launch Digital Fraud Dispute Workflow</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to="/file-complaint"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all"
+              >
+                <span>⚡ File Cybercrime Complaint</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/recovery"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-bold text-xs shadow-lg shadow-red-500/30 transition-all"
+              >
+                <span>Launch Recovery Dispute</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </div>
       )}

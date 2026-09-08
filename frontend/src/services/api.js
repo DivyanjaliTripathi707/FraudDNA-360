@@ -99,6 +99,7 @@ export const recoveryService = {
   getAllCases: () => api.get('/recovery'),
   getCaseByRef: (ref) => api.get(`/recovery/${ref}`),
   verifyTransaction: (payload) => api.post('/recovery/verify', payload),
+  processDispute: (payload) => api.post('/recovery/verify', payload),
   updateStatus: (ref, payload) => api.put(`/recovery/${ref}/status`, payload)
 };
 

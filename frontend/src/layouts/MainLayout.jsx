@@ -21,7 +21,8 @@ import {
   EyeOff,
   User,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  FileText
 } from 'lucide-react';
 
 export default function MainLayout({ children }) {
@@ -30,7 +31,8 @@ export default function MainLayout({ children }) {
 
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('frauddna_user') || '{"username": "admin_investigator", "role": "Investigator", "full_name": "Senior Inspector Verma"}');
+      const stored = localStorage.getItem('frauddna_user');
+      return stored ? JSON.parse(stored) : { username: 'admin_investigator', role: 'Investigator', full_name: 'Senior Inspector Verma' };
     } catch {
       return { username: 'admin_investigator', role: 'Investigator', full_name: 'Senior Inspector Verma' };
     }
@@ -63,15 +65,22 @@ export default function MainLayout({ children }) {
     {
       title: 'COMMAND CENTER',
       items: [
-        { path: '/dashboard', label: 'Executive Dashboard', icon: LayoutDashboard, roles: ['Citizen', 'Investigator', 'Admin'] }
+        { path: '/dashboard', label: 'Executive Dashboard', icon: LayoutDashboard, roles: ['Investigator', 'Admin'] }
+      ]
+    },
+    {
+      title: 'CITIZEN PORTAL',
+      items: [
+        { path: '/scam-checker', label: 'Scam & URL Checker', icon: ShieldAlert, roles: ['Citizen', 'Investigator', 'Admin'], highlight: true },
+        { path: '/file-complaint', label: 'File Cyber Crime Complaint', icon: FileText, roles: ['Citizen', 'Investigator', 'Admin'], highlight: true },
+        { path: '/recovery', label: 'Digital Recovery Portal', icon: LifeBuoy, roles: ['Citizen', 'Investigator', 'Admin'], highlight: true }
       ]
     },
     {
       title: 'LAYER 1: PREVENT',
       items: [
         { path: '/detection', label: 'Early Detection (L1)', icon: Search, roles: ['Investigator', 'Admin'] },
-        { path: '/mule-detection', label: 'Mule Risk Scorecard', icon: Activity, roles: ['Investigator', 'Admin'] },
-        { path: '/scam-checker', label: 'Scam & URL Checker', icon: ShieldAlert, roles: ['Citizen', 'Investigator', 'Admin'], highlight: true }
+        { path: '/mule-detection', label: 'Mule Risk Scorecard', icon: Activity, roles: ['Investigator', 'Admin'] }
       ]
     },
     {
@@ -98,12 +107,6 @@ export default function MainLayout({ children }) {
       items: [
         { path: '/alerts', label: 'Alerts & Leads', icon: Bell, roles: ['Investigator', 'Admin'] },
         { path: '/investigations', label: 'Cases & Autopilot', icon: FolderKanban, roles: ['Investigator', 'Admin'] }
-      ]
-    },
-    {
-      title: 'LAYER 6: RECOVER',
-      items: [
-        { path: '/recovery', label: 'Digital Recovery Portal', icon: LifeBuoy, roles: ['Citizen', 'Investigator', 'Admin'], highlight: true }
       ]
     },
     {
