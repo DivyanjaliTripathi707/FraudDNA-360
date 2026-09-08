@@ -48,6 +48,9 @@ export default function App() {
   return (
     <Router>
       <Routes>
+        {/* Root Route Always Starts at Login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        
         {/* Public Authentication Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

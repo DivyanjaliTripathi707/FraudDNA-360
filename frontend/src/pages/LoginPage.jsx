@@ -11,6 +11,12 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Clear any existing session when visiting Login page
+  React.useEffect(() => {
+    localStorage.removeItem('frauddna_token');
+    localStorage.removeItem('frauddna_user');
+  }, []);
+
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
     setError('');
