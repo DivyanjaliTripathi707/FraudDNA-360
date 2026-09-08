@@ -5,8 +5,8 @@ import { ShieldAlert, Lock, User, AlertCircle, ArrowRight, UserCheck, Shield } f
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState('Investigator');
-  const [username, setUsername] = useState('admin_investigator');
-  const [password, setPassword] = useState('admin123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -23,16 +23,8 @@ export default function LoginPage() {
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
     setError('');
-    if (role === 'Citizen') {
-      setUsername('citizen_user');
-      setPassword('citizen123');
-    } else if (role === 'Admin') {
-      setUsername('chief_admin');
-      setPassword('admin123');
-    } else {
-      setUsername('admin_investigator');
-      setPassword('admin123');
-    }
+    setUsername('');
+    setPassword('');
   };
 
   const handleLogin = async (e) => {
