@@ -38,6 +38,8 @@ export default function MainLayout({ children }) {
     }
   });
 
+  const [privacyMask, setPrivacyMask] = useState(true);
+
   useEffect(() => {
     if (!currentUser) {
       sessionStorage.clear();
