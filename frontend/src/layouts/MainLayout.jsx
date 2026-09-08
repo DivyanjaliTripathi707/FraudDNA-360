@@ -31,28 +31,20 @@ export default function MainLayout({ children }) {
 
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const stored = localStorage.getItem('frauddna_user');
-      return stored ? JSON.parse(stored) : { username: 'admin_investigator', role: 'Investigator', full_name: 'Senior Inspector Verma' };
+      const stored = sessionStorage.getItem('frauddna_user') || localStorage.getItem('frauddna_user');
+      return stored ? JSON.parse(stored) : null;
     } catch {
-      return { username: 'admin_investigator', role: 'Investigator', full_name: 'Senior Inspector Verma' };
+      return null;
     }
   });
 
-  const [privacyMask, setPrivacyMask] = useState(true);
-
-  // Switch role seamlessly for demonstration
-  const handleRoleSwitch = (newRole) => {
-    let updatedUser = { ...currentUser, role: newRole };
-    if (newRole === 'Citizen') {
-      updatedUser = { username: 'citizen_user', role: 'Citizen', full_name: 'Rajesh Sharma (Citizen)', phone: '+91 98214 55102' };
-    } else if (newRole === 'Admin') {
-      updatedUser = { username: 'chief_admin', role: 'Admin', full_name: 'Director S. Nambiar', badge: 'FIN-ADM-0001' };
-    } else {
-      updatedUser = { username: 'admin_investigator', role: 'Investigator', full_name: 'Senior Inspector Verma', badge: 'FIN-INV-9902' };
+  useEffect(() => {
+    if (!currentUser) {
+      sessionStorage.clear();
+      localStorage.clear();
+      navigate('/login', { replace: true });
     }
-    localStorage.setItem('frauddna_user', JSON.stringify(updatedUser));
-    setCurrentUser(updatedUser);
-  };
+  }, [currentUser, navigate]);
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -118,6 +110,8 @@ export default function MainLayout({ children }) {
       ]
     }
   ];
+
+  if (!currentUser) return null;
 
   return (
     <div className="flex h-screen bg-[#070B12] text-slate-100 overflow-hidden font-sans">
