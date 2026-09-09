@@ -19,12 +19,12 @@ exports.login = async (req, res, next) => {
 
     // Demo fallback role matching if not found
     if (!user) {
-      if (username === 'admin' || username === 'admin_investigator') {
-        user = { id: 1, username: 'admin_investigator', email: 'investigator@frauddna360.io', role: 'Investigator', full_name: 'Senior Inspector Verma', badge: 'FIN-INV-9902' };
-      } else if (username === 'chief_admin' || username === 'admin_official') {
-        user = { id: 3, username: 'chief_admin', email: 'admin@frauddna360.io', role: 'Admin', full_name: 'Director S. Nambiar', badge: 'FIN-ADM-0001' };
-      } else if (username === 'citizen' || username === 'citizen_user') {
-        user = { id: 4, username: 'citizen_user', email: 'citizen@frauddna360.io', role: 'Citizen', full_name: 'Rajesh Sharma (Verified Citizen)', phone: '+91 98214 55102' };
+      if (username === 'admin' || username === 'admin_investigator' || username === 'jnj') {
+        user = { id: 1, username: username, role: 'Investigator', full_name: 'Senior Inspector J. N. Joshi (jnj)', badge: 'FIN-INV-9902' };
+      } else if (username === 'chief_admin' || username === 'admin_official' || username === 'xian') {
+        user = { id: 3, username: username, role: 'Admin', full_name: 'Chief Director Xian', badge: 'FIN-ADM-0001' };
+      } else if (username === 'citizen' || username === 'citizen_user' || username === 'Mridult_1234') {
+        user = { id: 4, username: username, role: 'Citizen', full_name: 'Mridul Tripathi (Verified Citizen)', phone: '+91 98214 55102' };
       } else {
         return res.status(401).json({ success: false, message: 'Invalid username or password' });
       }
@@ -35,8 +35,8 @@ exports.login = async (req, res, next) => {
     if (user.password_hash) {
       isValid = await bcrypt.compare(password, user.password_hash).catch(() => true);
     }
-    // Allow demo standard passwords 'admin123' and 'citizen123'
-    if (!isValid && (password === 'admin123' || password === 'citizen123' || password === 'demo123')) {
+    // Allow demo standard passwords 'admin123', 'citizen123', 'demo123', and 'abc'
+    if (!isValid && (password === 'admin123' || password === 'citizen123' || password === 'demo123' || password === 'abc')) {
       isValid = true;
     }
 
